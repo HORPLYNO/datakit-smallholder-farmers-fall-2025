@@ -4,9 +4,9 @@
 This project explores how smallholder farmers discuss financial topics such as market prices, credit access, savings, and other non-farming livelihood concerns, to better understand their economic realities, challenges and opportunities for inclusion through financial tools, information to manage risk and investments in productivity. This analysis would inform Producer Direct's support for farmer entrepreneurship, market access, and rural financial systems.
 
 ## Research Questions
-- Question 1: What specific question are you trying to answer?
-- Question 2: What patterns are you looking for?
-- Question 3: What insights do you hope to provide?
+- Question 1: What share of farmer questions relate to financial topics?
+- Question 2: How do financial questions vary across seasons and regions?
+- Question 3: How do farmers express financial challenges and opportunities?
 
 ## Key Findings
 
@@ -43,6 +43,18 @@ Description of the finding, supported by data and visualizations.
 
 **Interpretation**: What this visualization shows and why it matters.
 
+## Recommendations
+### For Producers Direct
+1. **Action 1**: Specific recommendation for the organization
+2. **Action 2**: How to use these insights
+3. **Action 3**: What additional data or resources would help
+
+## Next Steps 
+### For Further Analysis
+1. **Recommendation 1**: What could be explored next
+2. **Recommendation 2**: How to deepen this analysis
+3. **Recommendation 3**: Related questions to investigate
+
 ## Limitations and Challenges
 
 ### Data Limitations
@@ -60,29 +72,27 @@ Description of the finding, supported by data and visualizations.
 - Translation accuracy issues
 - Other technical hurdles
 
-## Next Steps and Recommendations
-
-### For Further Analysis
-1. **Recommendation 1**: What could be explored next
-2. **Recommendation 2**: How to deepen this analysis
-3. **Recommendation 3**: Related questions to investigate
-
-### For Producers Direct
-1. **Action 1**: Specific recommendation for the organization
-2. **Action 2**: How to use these insights
-3. **Action 3**: What additional data or resources would help
-
 ## Methodology
 ### Data Source
 - Producers Direct English Dataset
 
 ### Approach
-1. **Step 1**: Data loading and initial exploration
-2. **Step 2**: Data cleaning and preprocessing
-   Data was deduplicated to remove multiple responses to a particular question, since the analysis focused only on questions. This reduced the final dataset to ~3M rows.
-4. **Step 3**: Analysis techniques applied
-5. **Step 4**: Visualization and interpretation
-Exploratory analysis and visualizations were obtained from Tableau [Tableau Packaged Workbook Uploaded]
+**Step 1**: Data loading, cleaning, and preprocessing
+   - Processed data efficiently using DuckDB for large-file handling.
+   - Cleaned, normalized, and deduplicated raw question data and standardized country codes.  Data was deduplicated to remove multiple responses to a particular question, since the analysis focused only on questions. This reduced the final dataset to ~3M rows.
+   - Built classification logic for financial categories and refined sub-themes for each category.
+   - Generated binary financial flags, matched keywords, topic groupings, and normalized text fields by implementing regex-based topic extraction.
+  
+ **Step 2**: Analysis and statistics
+   - Conducted chi-square tests to measure significant differences across countries and categories.
+   - Performed time series analysis to detect seasonal spikes in financial behavior.
+   - Compared product-level economic concerns (e.g., maize vs. poultry vs. tomatoes).
+   - Evaluated cross-country patterns in credit needs, subsidies, savings culture, and hardship.
+     
+**Step 3**: Visualization, report, and interpretation
+   - Designed Tableau dashboards to explore and visualize monthly trends, category flows, and country differences [Tableau Packaged Workbook Uploaded]
+   - Produced summary insights focused on farmers’ real-world financial pain points.
+   - Wrote interpretive narratives explaining behavioral patterns and regional variations.
 
 ### Tools and Technologies
 - **Programming Language**: SQL
@@ -143,22 +153,10 @@ SQL code ran using DuckDB driver in DBeaver.
 # 3. 03_analysis.ipynb
 ```
 
-## References and Resources
-
-### Academic Papers
-- Author, A. (Year). Title. Journal.
-
-### Datasets
-- Dataset Name. Source. URL.
-
-### Tools and Libraries
-- Library Name. Version. URL.
-
 ## Contact and Collaboration
-
-**Author**: [Your Name]
-**GitHub**: @hwilner
-**Slack**: @[your_slack_handle]
+**Author**: Precious Enahoro
+**GitHub**: @PreciousEnahoro
+**Linkedin**: (https://www.linkedin.com/in/precious-enahoro/)
 
 **Collaboration Welcome**: 
 - Open to feedback and suggestions
@@ -166,11 +164,7 @@ SQL code ran using DuckDB driver in DBeaver.
 - Available to answer questions about this approach
 
 ## Acknowledgments
-
-- Thanks to [other contributors] for [specific help]
-- Built upon work by [other contributors] in [other challenges]
-- Inspired by [specific approach or paper]
-
+- Inspired by @TrevorW's sharing of how he started to think about the financial taxonomies on Slack!
 ---
 
 **Last Updated**: 11/26/2025
