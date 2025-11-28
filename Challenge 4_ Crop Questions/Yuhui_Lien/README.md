@@ -154,3 +154,90 @@ This BERTopic distribution chart suggests that the current model parameters stil
 1. Run full dataset (3M rows)  
 2. Visualize hierarchical structure 
 Optimize Clustering Parameters: Refine BERTopic hyperparameters (e.g., min_topic_size, UMAP settings) to reduce the volume of vague or overly broad clusters and improve the specificity of subtopic assignments. 
+
+
+## Challenge 4: Crop Question Analysis: Analyzing Farmer Demand, Community Supply, and Knowledge Gaps
+
+## 1. Executive Summary
+
+
+### Key Findings: 📊
+
+---
+
+#### 1. Supply-Demand Mismatch and Critical Gaps (The Mismatch)
+
+* **Critical Knowledge Gap (High-Volume/Low-Supply):** High-frequency, common farmer questions about **tomato** (Demand Volume Rank 6) and **crop** (Demand Volume Rank 7) are not represented in the "Supply Detail Top 10." This suggests that the detail and comprehensiveness of community knowledge supply are **significantly insufficient** relative to the high, recurring demand for these universal topics, potentially leading to repeated queries.
+* **Balanced but High-Volume Response (Banana):** The topic **banana** shows high demand (Rank 9) but is also accompanied by relatively high Supply Detail (Rank 10). This indicates that while the questions are frequent, the community has strong, detailed knowledge-sharing members who are responding comprehensively.
+
+---
+
+#### 2. Demand Patterns (Farmer Questioning Behavior)
+
+* **Dominant Demand (Repetitiveness):** **General Topic** (Rank 1), **cattle** (Rank 2), and **maize** (Rank 3) account for the largest volume of questions (Report A). This clearly identifies the most common and widespread agricultural and livestock challenges faced by the community.
+* **Specialized Questioning Behavior (Specificity):** Farmers asking about niche crops like **peach** (Rank 1), **pear** (Rank 2), and $\text{setaria}$ (Rank 3) formulate the most complex and detailed questions (Report B). This behavior suggests that **askers must provide extensive context** to their peers in these niche areas, where established community knowledge may be sparse, to elicit a helpful response.
+
+---
+
+#### 3. Supply Patterns (Community Knowledge Flow)
+
+* **High-Quality Knowledge Supply (High-Detail):** The longest and most detailed answers (high Supply Detail score) are concentrated on specialized topics such as $\text{rye}$ (Rank 1) and $\text{pigeon-pea}$ (Rank 2) (Report C). This demonstrates the existence of **passionate and highly experienced farmers** in these niche domains who are willing to share comprehensive, practical knowledge.
+* **Non-Cattle Livestock Supply:** Topics related to non-cattle animals, specifically **bee** (Rank 4) and **poultry** (Rank 5), show strong Supply Detail, indicating a robust knowledge-sharing culture within these specific livestock sub-communities.
+
+
+---
+
+## 2. Data
+
+| Column Used | Description | Purpose in Analysis |
+| :--- | :--- | :--- |
+| `question_topic` | Pre-existing classification of the question's subject (e.g., maize, poultry). | Primary grouping variable for all cross-analyses. |
+| `question_content_cleaned` | Cleaned text of the farmer's question. | Used to derive **Demand Complexity** ($\text{Specificity Score}$). |
+| `response_content_cleaned` | Answer provided by the community. | Used to derive **Supply Detail** ($\text{Response Score}$). |
+
+---
+
+## 3. Methodology
+
+The core of the analysis is a **Supply-Demand Mismatch Model** built on three key quantifiable metrics:
+
+### 3.1 Feature Engineering (Quantification)
+To allow for direct comparison, we used **Min-Max Normalization** to scale all metrics to a uniform $[0, 1]$ range.
+
+* **Demand Volume (Report A):** Raw count of questions per topic.
+* **Demand Complexity Score (Report B):** Calculated by normalizing the raw **Question Length** (word count) for *each individual question*, then taking the average score per topic. (Higher score = more detailed demand).
+* **Supply Detail Score (Report C):** Calculated by normalizing the raw **Answer Length** (word count) for *each individual response*, then taking the average score per topic. (Higher score = more detailed supply).
+
+
+### 3.2 Cross-Topic Analysis
+Metrics were aggregated using `df.groupby('question_topic').agg()`. The analysis focused on identifying patterns where **Demand Complexity $\ne$ Supply Detail**.
+
+---
+
+## 4. Results and Visualization
+
+The following reports quantify the relationship between farmer necessity and platform content flow.
+
+### Report A: Demand Volume (Question Repetitiveness)
+![report_a_repetitiveness_seaborn](https://github.com/yhlien1221/datakit-smallholder-farmers-fall-2025/blob/main/Challenge%204_%20Crop%20Questions/Yuhui_Lien/pictures/report_a_repetitiveness_seaborn.png)
+**Figure 1:** Total Demand Volume by Topic.
+
+* **Takeaway:** The top 4 topics represent the highest consumption of system capacity.
+
+### Report B: Demand Complexity Ranking
+![report_b_demand_specificity_seaborn](https://github.com/yhlien1221/datakit-smallholder-farmers-fall-2025/blob/main/Challenge%204_%20Crop%20Questions/Yuhui_Lien/pictures/report_b_demand_specificity_seaborn.png)
+**Figure 2:** Ranking of Topics by Average Farmer Question Complexity.
+
+* **Takeaway:** Farmer effort is highest for niche crops ($\text{peach}, \text{pear}$), indicating these specialized subjects require maximum user input for proper context.
+
+### Report C: Knowledge Supply Detail Ranking
+![report_c_supply_detail_seaborn](https://github.com/yhlien1221/datakit-smallholder-farmers-fall-2025/blob/main/Challenge%204_%20Crop%20Questions/Yuhui_Lien/pictures/report_c_supply_detail_seaborn.png)
+**Figure 3:** Ranking of Topics by Average Answer Detail (Supply).
+
+* **Takeaway:** The system's resource allocation for detail is highest for topics driven by **knowledge scarcity** ($\text{rye}, \text{pigeon-pea}$).
+
+---
+
+### Next Steps:
+
+1. **Knowledge Quality Assessment (BERTopic)**: Implement BERTopic to analyze community response content, shifting the focus from mere answer length to knowledge focus and quality to precisely identify true information gaps.
