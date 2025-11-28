@@ -24,6 +24,10 @@ Note: Due to the massive dataset size (21M rows), this analysis was conducted on
 4. **Step 4**: Aggregation & Feature Engineering
 5. **Step 5**: Visualizations and Predictive Modeling
 
+### Tools and Technologies
+- **Programming Language**: Python 3.11
+- **Key Libraries**: pandas, numpy, duckdb, matplotlib, seaborn, nltk, scikit-learn, etc. 
+
 ## Use of Generative AI
 
 ### Tools Used
@@ -40,19 +44,21 @@ Biological Insight: While rainfall creates the potential for pests, higher tempe
 Implications: Producers Direct should prioritize "Warm + Wet" alerts. A combination of seasonal rain and high heat forecasts would be important to implement for pest advisory campaigns.
 
 ### The Limits of National-Level Prediction
-The predictive model yielded a negative R^2 score (-7.12) for query volume.
+The predictive model yielded a negative R^2 score (-5.35) for question volume.
 
 This metric confirms that Country-level weather is too broad to predict localized spikes. A difference in weather in different regions average out to "Normal" in the dataset, which washes out the signal.
 
-Despite the poor volume prediction, the model predictions follow the general trend of the actual data, confirming that farming calendars (month_num) are the baseline driver of farmer's questions.
+Despite the poor volume prediction, the model predictions follow the general trend of the actual data, confirming that farming calendars (month_num) are the baseline driver of farmers' questions.
 
 ## Visualizations
 
 ###  Actual vs. Predicted Question Volume (The "Trend" Insight)
+http://localhost:8888/lab/tree/Challenge%201%20_Weather%20Patterns/allisonsibrian/predictions_and_actual.png
 
 **Interpretation**: The Predicted Line (Green) tends to rise and fall in sync with the Actual Line (Black). This proves the model successfully learned the seasonal cycle of farmer needs. Due to the lack of regional data, the model lacks the granular location data to predict how many questions will be asked during a specific instance. 
 
 ### Feature Importance
+http://localhost:8888/lab/tree/Challenge%201%20_Weather%20Patterns/allisonsibrian/feature_importances.png
 
 **Interpretation**: Heat and Seasonality dominate the model, validating the recommendation to shift content strategy toward temperature-based alerts and seasonal calendars.
 
