@@ -156,7 +156,7 @@ This BERTopic distribution chart suggests that the current model parameters stil
 Optimize Clustering Parameters: Refine BERTopic hyperparameters (e.g., min_topic_size, UMAP settings) to reduce the volume of vague or overly broad clusters and improve the specificity of subtopic assignments. 
 
 
-## Challenge 4: Crop Question Analysis: Analyzing Farmer Demand, Community Supply, and Knowledge Gaps
+## Challenge 4: Crop Question Analysis: Analyzing Farmer Demand, Community Supply, and Knowledge Gaps (challenge-4-crop-questions-Analyzing-Farmer-Demand-Community-Supply-and- Knowledge-Gaps.ipynb)
 
 ## 1. Executive Summary
 
@@ -244,11 +244,15 @@ The following reports quantify the relationship between farmer necessity and pla
 
 
 
-## Semantic Knowledge Gap Analysis: Quantifying Farmer Demand vs. Supply Detail
+## Semantic Knowledge Gap Analysis: Quantifying Farmer Demand vs. Supply Detail (challenge-4-crop-questions-tfidf.ipynb)
 
 ## 1. Executive Summary
 
 This analysis moves beyond simple keyword matching to quantify the semantic difference between the complexity of farmers' questions and the detail of provided answers. By using **TF-IDF (Semantic Weighting)**, we precisely identify the most critical knowledge gaps in the system.
+
+## Data and Parameters:
+The original English dataset is approximately **11.5M** records, but the TF-IDF analysis was performed on a **5 million record sample** of the question/response data set。 The final gap score is heavily weighted towards semantic depth: **Semantic Score (70%)** and **Word Count Score (30%)**
+
 
 ### Key Findings: 
 
