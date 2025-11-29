@@ -119,7 +119,7 @@ Farmers frame financial questions in practical, outcome-driven language. Common 
    - Evaluated cross-country patterns in credit needs, subsidies, savings culture, and hardship.
      
 **Step 3**: Visualization, report, and interpretation
-   - Designed Tableau dashboards to explore and visualize monthly trends, category flows, and country differences [Tableau Packaged Workbook Uploaded](https://public.tableau.com/app/profile/precious.o.enahoro/viz/DataKindandProducersDirectDataKitChallenge-PreciousEnahoro-Challenge5/KeyFinding1)
+   - Designed Tableau dashboards to explore and visualize monthly trends, category flows, and country differences [Dashboard Link - Tableau Public](https://public.tableau.com/app/profile/precious.o.enahoro/viz/DataKindandProducersDirectDataKitChallenge-PreciousEnahoro-Challenge5/KeyFinding1)
    - Produced summary insights focused on farmers’ real-world financial pain points.
    - Wrote interpretive narratives explaining behavioral patterns and regional variations.
 
@@ -195,5 +195,5 @@ SQL code ran using DuckDB driver in DBeaver.
 - Inspired by @TrevorW's sharing of how he started to think about the financial taxonomies on Slack!
 ---
 
-**Last Updated**: 11/26/2025 | **Status**: In Progress
+**Last Updated**: 11/29/2025 | **Status**: Complete
 
