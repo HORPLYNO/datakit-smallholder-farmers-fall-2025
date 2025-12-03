@@ -2,7 +2,7 @@
 
 Folder containing my work for Challenge #2. Please scroll through this readme to view an overview of each of my submissions.
 
-Current submission count: 3
+Current submission count: 4
 
 ---
 
@@ -155,3 +155,72 @@ This notebook contains an analysis of word frequency across different temporal r
 - "tomatoes" exhibits singular upward spike during August (96.1 per 1K), indicating harvest activity at end of Harvest 1 period (Jun-Aug)
 
 <img width="3796" height="5472" alt="image" src="https://github.com/user-attachments/assets/b73e00c5-3845-4e7c-952e-a31ba48c04b0" />
+
+---
+
+## **Submission #4: Kenya Seasonal Question LDA Topic Modeling**
+
+### Overview
+This notebook applies Latent Dirichlet Allocation (LDA) to uncover latent topics within Kenyan farmer questions across five agricultural seasons. Using natural language processing and unsupervised machine learning, the analysis identifies 5 distinct topics per season from 100,000 randomly sampled questions, revealing seasonal patterns in agricultural information needs.
+
+### Approach
+
+**Data Loading & Preparation**
+- Loaded optimized dataset from second submission (7.5M Kenya English questions)
+- Dataset reduced from 35 to 12 essential columns, applied data type optimization (categorical encoding, integer downcasting)
+- Reduced dataset footprint from 10.80 GB to 1.09 GB
+
+**NLP Preprocessing**
+- Converted text to lowercase
+- Removed URLs, email addresses, special characters, numbers
+- Tokenized text
+- Removed stopwords
+- Lemmatized text
+- Filtered out tokens with fewer than 3 characters
+- Filtered out documents with fewer than 3 tokens
+- Final preprocessed corpus: 6,981,271 documents, 250,845 unique tokens
+
+**LDA Topic Modeling**
+- Seasonal sampling: 100,000 documents randomly sampled per agricultural season
+- Dictionary construction: Gensim filter_extremes applied (no_below=5, no_above=0.5, keep_n=10,000)
+- Corpus creation: Bag-of-words representation via doc2bow
+- Model training: 5 topics per season, 10 passes, 100 iterations, alpha='auto'
+- Evaluation: C_V coherence metric for topic interpretability assessment
+
+**Visualization**
+- Generated word clouds displaying top 30 words per topic across each season
+- Created stacked bar charts showing topic prevalence within each season
+- Created coherence comparison chart across all agricultural seasons
+
+### Dependencies
+- pandas >= 2.2.3
+- numpy >= 1.26.4
+- matplotlib >= 3.6.0
+- seaborn >= 0.12.2
+- nltk >= 3.9.2
+- gensim >= 4.3.0
+- wordcloud >= 1.9.0
+
+### Results
+**Model Performance**
+- Coherence scores (C_V) ranged from 0.3253 to 0.3701 across seasons
+- Transition (Sep) had the highest coherence; Short Rains (Oct-Dec) had the lowest
+- All seasons demonstrated acceptable coherence (>0.30) for exploratory data analysis, indicating interpretable topics
+
+**Seasonal Topic Patterns**
+- **Long Rains (Mar-May)**
+  - Topic 4 (plant, maize, best, crop...) showed the highest prevalence (38%), reflecting farmer focus on planting maize during the primary planting season
+- **Harvest 1 (Jun-Aug)**
+  - Topic 4 (plant, best, tomato, maize...) showed the highest prevalence (39%), indicating continued maize interest during the first harvest period
+  - Inclusion of 'tomato' indicates harvest of this crop; Consistent with the temporal word frequency findings in my third submission
+- **Transition (Sep)**
+  - Topic 2 (maize, plant, best, crop...) showed the highest prevalence (47%), suggesting continued interest in maize heading into the Short Rains/secondary planting season
+- **Short Rains (Oct-Dec)**
+  - Topic 0 (maize, plant, best, crop...) showed the highest prevalence (0.42%); Dominant interest in maize during the Short Rains/secondary planting season is consistent with the findings in my third submission
+- **Harvest 2 (Jan-Feb)**
+  - Topic 3 (plant, maize, best, crop...) showed the highest prevalence (0.35%)
+**Livestock vs. Crop Balance**
+  - Livestock topics (dairy, cow, cattle, milk, goat, chicken, egg) remained relatively stable across seasons, but had much lower prevalence (~20) compared to crop/maize related topics (>30%)
+  - Maize-related topics dominated across agricultural season, further cementing its year-round significance
+
+<img width="3552" height="5948" alt="image" src="https://github.com/user-attachments/assets/c7719866-553a-40ac-b77b-9092d8aa4a50" />
