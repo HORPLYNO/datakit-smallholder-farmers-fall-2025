@@ -1,0 +1,472 @@
+---
+title: "Challenge 2"
+author: "Sarim Rizvi"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This report explores seasonality in farmer questions across Kenya and Uganda, using Wefarm Q&A data. We analyse monthly volumes, topic distributions, and align them with cropping seasons to understand farmer needs and provide actionable insights for stakeholders. All results are generated through R code, which is documented below
+
+## Loading required libraries
+```{r libraries, echo=TRUE, warning=FALSE}
+library(tidyverse)
+library(arrow)
+library(corrgram)
+library(data.table)
+library(qs)
+library(naniar)
+library(text2vec)
+library(tm)
+library(textstem)
+library(ldatuning)
+library(Matrix)
+```
+
+## Loading the data
+The data was pre-saved as RDS file to avoid reloading the CSV file
+```{r data}
+# agridata <- fread("data/agridata.csv", header = T) # Uncomment and run to load csv file.
+agridata <- readRDS("agridata.rds")
+str(agridata)
+```
+
+We then filter to English questions and responses, as transalation is not part of this report
+```{r filter_english}
+agridata_en <- agridata %>% filter(question_language == "eng", response_language == "eng")
+agridata_en <- agridata_en %>% select(-c(question_language, response_language)) # language fields are not required now
+agridata_en <- as.data.frame(agridata_en)
+str(agridata_en)
+```
+
+## Basic Data Understanding
+Summary statistics to get a better understanding of the data.
+```{r summary}
+summary(agridata_en)
+```
+
+## Top Questions
+The most frequently asked questions
+```{r}
+n_distinct(agridata_en$question_id)/nrow(agridata_en) # Only 25% are different questions
+top_20_questions <- sort(table(as.factor(agridata_en$question_id)), decreasing=T)[1:20] # 4 questions have been answered more than 1000 times
+```
+
+```{r top20 questions}
+df_plot <- data.frame(
+  question_id = names(top_20_questions), 
+  count = as.numeric(top_20_questions)   
+)
+
+# Convert question_id to a factor to ensure the order is maintained
+df_plot$question_id <- factor(df_plot$question_id, levels = df_plot$question_id)
+
+# Generate the plot
+ggplot(df_plot, aes(x = question_id, y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "Top 20 Most Frequent Questions",
+    x = "Question ID",
+    y = "Frequency"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+```
+
+```{r question frequency dist}
+# Frequency distribution of questions
+question_frequencies <- agridata_en %>%
+  count(question_id, name = "count")
+
+plot <- ggplot(question_frequencies, aes(x = count)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "white") +
+  
+  # Using log scale to handle large variation in question count
+  scale_y_log10(
+    labels = scales::comma
+  ) +
+  scale_x_continuous(limits = c(1, NA)) +
+  labs(
+    title = "Log-Scale Distribution of Question Counts",
+    subtitle = "Histogram of Question Frequencies (Binwidth = 10)",
+    x = "Number of Times a Question was Asked (Count)",
+    y = "Number of Unique Questions (Log Scale)"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
+plot
+```
+Insight: A small number of questions are repeated thousands of times, while most are asked only once.
+
+
+## Top Question Topics
+```{r}
+agridata_en$question_topic<-factor(agridata_en$question_topic)
+
+top_20_question_topics <- sort(table(agridata_en$question_topic), decreasing=T)[2:21] # 4 questions have been answered more than 1000 times
+
+df_plot <- data.frame(
+  question_topic = names(top_20_question_topics), 
+  count = as.numeric(top_20_question_topics)   
+)
+
+df_plot$question_topic <- factor(df_plot$question_topic, levels = df_plot$question_topic)
+
+# Generate the plot
+ggplot(df_plot, aes(x = question_topic, y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(
+    title = "Top 20 Most Frequent Question Topics",
+    x = "Question Topics",
+    y = "Frequency"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+Insight: Cattle, maize, and chicken dominate farmer queries, reflecting key agricultural activities.
+
+
+## Questions Vs responses
+Comparing daily counts of questions and responses.
+
+```{r}
+# Create daily counts for questions
+question_daily <- agridata_en %>%
+  mutate(date = as.Date(question_sent)) %>%
+  count(date) %>%
+  mutate(type = "question")
+
+# Create daily counts for responses
+response_daily <- agridata_en %>%
+  mutate(date = as.Date(response_sent)) %>%
+  count(date) %>%
+  mutate(type = "response")
+
+# Combine both
+daily_combined <- bind_rows(question_daily, response_daily)
+
+# Plot
+ggplot(daily_combined, aes(x = date, y = n, color = type)) +
+  geom_line() +
+  labs(title = "Daily Volume: Questions vs Responses",
+       x = "Date", y = "Count", color = "Type") +
+  theme_minimal()
+```
+Insight: Responses generally track question volume, but lag slightly in timing.
+
+## Handling Missing data
+Replacing empty values with NA for easier tracking of missing values
+```{r}
+agridata_en <- agridata_en %>%
+  mutate(across(where(is.factor), as.character)) %>%  # Convert factors to character
+  mutate(across(where(is.character), ~na_if(.x, ""))) # Replace "" with NA
+
+miss_var_summary(agridata_en)
+```
+Insight: Most columns have complete information
+
+The following columns were removed: `question_user_gender`, `response_user_gender`, `question_user_dob`, `response_user_dob`, `question_user_created_at`, `response_user_created_at`, `response_user_status` and `question_user_status`. These have high % of missing values or are not relevant for the analysis.
+```{r}
+## Removing gender and dob due to high missing%
+agridata_en <- agridata_en %>% 
+  select(-c(question_user_gender, response_user_gender, 
+            question_user_dob, response_user_dob))
+
+## Removing User creation date - unnecessary information
+agridata_en$question_user_created_at <- NULL
+agridata_en$response_user_created_at <- NULL
+agridata_en$response_user_status <- NULL
+agridata_en$question_user_status <- NULL
+```
+
+
+## Feature Engineering
+Converting country code to factor as there are only four possible values.
+```{r}
+agridata_en$question_user_country_code <- factor(agridata_en$question_user_country_code)
+agridata_en$response_user_country_code <- factor(agridata_en$response_user_country_code)
+```
+
+Breaking down date and time of question and responses into month and year to track seasonality
+```{r}
+## Breaking down Question and response times
+str(agridata_en$question_sent)
+agridata_en$question_sent_year <- year(agridata_en$question_sent)
+agridata_en$question_sent_month <- month(agridata_en$question_sent)
+agridata_en$response_sent_year <- year(agridata_en$response_sent)
+agridata_en$response_sent_month <- month(agridata_en$response_sent)
+
+## Removing question_sent and response_sent
+agridata_en$response_sent <- NULL
+agridata_en$question_sent <- NULL
+```
+
+## Yearly question distribution
+```{r}
+## Plot with faceting by year
+monthly_by_year <- agridata_en %>%
+  group_by(question_sent_year, question_sent_month) %>%
+  summarise(total_questions = n(), .groups = "drop") %>%
+  mutate(month_label = factor(month.name[question_sent_month], levels = month.name))
+
+ggplot(monthly_by_year, aes(x = month_label, y = total_questions)) +
+  geom_col(fill = "steelblue") +
+  facet_wrap(~ question_sent_year, ncol = 3) +
+  labs(
+    title = "Monthly Question Volume Faceted by Year",
+    x = "Month",
+    y = "Number of Questions"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Insight: The dataset has the most questions in 2018. 2017 and 2022 have limited coverage over the year.
+
+## Monthly Seasonality
+Examining monthly totals across all years.
+```{r}
+monthly_totals <- agridata_en %>%
+  group_by(question_sent_month) %>%
+  summarise(total_questions = n(), .groups = "drop")
+
+monthly_totals$month_label <- month.name[monthly_totals$question_sent_month]
+
+ggplot(monthly_totals, aes(x = reorder(month_label, question_sent_month), y = total_questions)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Total Questions Asked by Month (All Years Combined)",
+    x = "Month",
+    y = "Number of Questions"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+Insight: Peaks in March–May and October–December align with planting seasons.
+
+
+## Country comparison
+Comparing seasonal trends across countries
+```{r}
+monthly_by_country <- agridata_en %>%
+  group_by(question_user_country_code, question_sent_month) %>%
+  summarise(total_questions = n(), .groups = "drop") %>%
+  mutate(month_label = factor(month.name[question_sent_month], levels = month.name))
+
+ggplot(monthly_by_country,
+       aes(x = month_label, y = total_questions, color = question_user_country_code, group = question_user_country_code)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(
+    limits = c(0, 1000000),       
+    labels = scales::comma    
+  )+
+  labs(
+    title = "Monthly Question Volume by Country",
+    x = "Month",
+    y = "Number of Questions",
+    color = "Country"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+Insight: Kenya and Uganda show similar seasonal peaks, but Uganda’s Season B creates a second wave.
+
+## Topic Modelling (LDA)
+Applying LDA to discover topics in farmer questions.
+```{r}
+## Creating a new dataframe with just the question ID and question content
+lda_input <- agridata_en %>%
+  select(question_id, question_content) %>%
+  distinct(question_id, .keep_all = TRUE) %>%
+  filter(!is.na(question_content))
+str(lda_input)
+
+```
+
+Preprocessing the data by removing custom words, punctuation and numbers. Also converted data to lower case for easier processing. The data was then lemmatised to get the root words.
+```{r}
+## Data Preprocessing
+custom_stopwords <- c(stopwords("en"), "q", "question", "what", "where", "why", "how", "when", "who", "which", "whom", "whose", "can", "ask")
+
+prep_fun <- function(text) {
+  text %>%
+    tolower() %>%
+    removePunctuation() %>%
+    str_replace_all("^q\\s*-*", "") %>%
+    removeNumbers() %>%
+    removeWords(custom_stopwords) %>%
+    stripWhitespace() %>%
+    lemmatize_strings()
+}
+
+lda_input_clean <- lda_input %>%
+  mutate(clean_text = prep_fun(question_content))
+```
+
+Tokenisation is done to divide the questions into a table, with each column having a word(token)
+```{r}
+## Tokenisation and DTM
+tokens <- word_tokenizer(lda_input_clean$clean_text)
+
+it <- itoken(tokens, progressbar = TRUE)
+vocab <- create_vocabulary(it) %>%
+  prune_vocabulary(term_count_min = 10, doc_proportion_max = 0.5)
+```
+
+Most common words from the questions.
+```{r}
+vocab %>%
+  arrange(desc(term_count)) %>%
+  head(50)
+```
+
+Insight: Vocabulary confirms key terms like “maize”, “cow”, “tomato”, “seed”, “market” dominate farmer queries.
+
+Creating the LDA model
+```{r}
+
+vectorizer <- vocab_vectorizer(vocab)
+dtm <- create_dtm(it, vectorizer)
+
+```
+```{r}
+lda_model <- LDA$new(n_topics = 10, doc_topic_prior = 0.1, topic_word_prior = 0.01)
+doc_topic_distr <- lda_model$fit_transform(dtm, n_iter = 1000)
+```
+
+Topic assignment
+```{r}
+topic_assignments <- data.frame(
+  question_id = lda_input_clean$question_id,
+  topic = max.col(doc_topic_distr)  # most probable topic per document
+)
+```
+
+Merging topics to the question and labelling the topic based on the most common words
+```{r}
+agridata_en <- agridata_en %>%
+  left_join(topic_assignments, by = "question_id")
+
+## Top Words and Topic labelling
+top_words <- lda_model$get_top_words(n = 10, lambda = 1)
+
+topic_labels <- c(
+  "Crop cultivation basics",     # Topic 1
+  "Poultry farming",             # Topic 2
+  "Crop management & harvest",   # Topic 3
+  "Starting a farm/business",    # Topic 4
+  "Market & pricing",            # Topic 5
+  "Crop protection",             # Topic 6
+  "Other livestock & community", # Topic 7
+  "Platform interactions",       # Topic 8
+  "Banana/soil management",      # Topic 9
+  "Livestock & dairy"            # Topic 10
+)
+
+agridata_en$topic_label <- topic_labels[agridata_en$topic]
+table(agridata_en$topic_label)
+```
+
+```{r}
+topic_month_counts <- agridata_en %>%
+  filter(!is.na(topic_label), !is.na(question_sent_month)) %>%
+  group_by(question_sent_year, question_sent_month, topic_label) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(month_label = factor(month.name[question_sent_month], levels = month.name))
+```
+
+Plot showing the topic trend throughout the year
+```{r}
+ggplot(topic_month_counts,
+       aes(x = month_label, y = count,
+           color = topic_label,
+           group = topic_label)) +
+  geom_line() +
+  facet_wrap(~question_sent_year, scales = "free_y", ncol = 2) +
+  labs(
+    title = "Seasonal Trends in Farmer Questions by Topic",
+    x = "Month",
+    y = "Number of Questions",
+    color = "Topic"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Country-wise season
+```{r}
+season_map <- data.frame(
+  country = c(rep("ke", 12), rep("ug", 12)),
+  month = rep(1:12, 2),
+  season_phase = c(
+    # Kenya
+    "Harvest", "Harvest", "Planting", "Planting", "Planting",
+    "Harvest", "Harvest", "Harvest", "Dry",
+    "Planting", "Planting", "Planting",
+    # Uganda
+    "Harvest", "Harvest", "Planting", "Planting", "Planting",
+    "Harvest", "Harvest", "Harvest", "Planting",
+    "Planting", "Planting", "Harvest"
+  )
+)
+topic_month_counts <- agridata_en %>%
+  filter(!is.na(topic_label), !is.na(question_sent_month), !is.na(question_user_country_code)) %>%
+  group_by(question_user_country_code, question_sent_year, question_sent_month, topic_label) %>%
+  summarise(count = n(), .groups = "drop")
+
+topic_season_counts <- topic_month_counts %>%
+  left_join(season_map,
+            by = c("question_user_country_code" = "country",
+                   "question_sent_month" = "month"))
+
+```
+
+Comparison of topic across the year in Kenya and Uganda
+```{r}
+
+seasonal_topics <- topic_season_counts %>% filter(question_user_country_code == 'ke'| question_user_country_code == 'ug') %>%
+  group_by(question_user_country_code, season_phase, topic_label) %>%
+  summarise(total_questions = sum(count), .groups = "drop")
+
+ggplot(seasonal_topics,
+       aes(x = season_phase, y = total_questions,
+           fill = topic_label)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~ question_user_country_code) +
+  labs(
+    title = "Topic Distribution by Cropping Season and Country",
+    x = "Season Phase",
+    y = "Number of Questions",
+    fill = "Topic"
+  ) +
+  theme_minimal()
+
+```
+
+## Key Insights
+- Farmer engagement is seasonal, peaking in planting and harvest months.
+
+- Kenya: Two peaks (long rains Mar–May, short rains Oct–Dec).
+
+- Uganda: Two cropping seasons (Season A Mar–May, Season B Sep–Nov).
+
+- Topics:
+
+   - Planting → seed varieties, pest control, soil fertility.
+
+   - Harvest → storage, pricing, market access.
+
+   - Livestock/poultry → steady year‑round.
+
+- Implication: Support services (advice, market info, pest alerts) should be timed to cropping calendars.
+
+## Conclusion
+Seasonality strongly shapes farmer information needs. By aligning support and interventions with planting and harvest cycles, Wefarm and partners can maximize impact.
