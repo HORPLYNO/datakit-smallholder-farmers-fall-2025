@@ -4,9 +4,9 @@ The goal of the analyses here was to generate a predictive model to anticipate f
 
 This folder contains the code and supplemental data necessary to train and export the model.
 
-**Question_Prediction_Model.ipynb** - this Jupyter notebook contains the code necessary to make the model. Adjust filepaths and filenames as needed in the first cell.
-**Topic_prediction_app.py** - this simple app can be launched locally to interact with the model and generate predictions from user input.
-**QTOPIC.pkl, QTOPIC.joblib** - these are the same final model, uploaded in two different file formats. The same model (different filename) is also uploaded to the Google Drive.
+**Question_Prediction_Model.ipynb** - this Jupyter notebook contains the code necessary to make the model. Adjust filepaths and filenames as needed in the first cell.  
+**Topic_prediction_app.py** - this simple app can be launched locally to interact with the model and generate predictions from user input.  
+**QTOPIC.pkl, QTOPIC.joblib** - these are the same final model, uploaded in two different file formats. The same model (different filename) is also uploaded to the Google Drive.  
 **UGA_weather_data.csv, KEN_weather_data.csv, TZA_weather_data.csv** - these datasets contain the weather data used to train and test the model. These datasets were helpfully prepared and shared by another DataKit participant, [İbrahim Yücel](https://github.com/ibraahimycl/datakit-smallholder-farmers-fall-2025/tree/main/Challenge%201%20_Weather%20Patterns/ibrahim-yucel/weather-data).
 
 ### What the model is
