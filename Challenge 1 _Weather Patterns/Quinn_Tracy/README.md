@@ -27,7 +27,7 @@ While the model generates a prediction better than chance guessing among these t
 
 The weather data used here were from monthly averages/total in these countries. Examining this question with better temporal resolution in the weather data (daily or weekly) may strengthen the model.
 
-Question topics should also be examined further, if possible. Exploration of the data suggests some labels are frequently a poor fit for their question content. For example, many of the questions under the topic 'camel' are actually about a bacterial disease affecting bananas, and while 'pigeon' does contain some questions related to the bird many are completely unrelated. Other topics may benefit from more sophisticated parsing; 'cat', for example, includes questions about cats, but also about cat fish and cat erpillers.
+Question topics should also be examined further, if possible. While no glaring problems were uncovered with the topics incorporated into the model, exploration of the data suggests some other labels are frequently a poor fit for their question content. For example, many of the questions under the topic 'camel' are actually about a bacterial disease affecting bananas, and while 'pigeon' does contain some questions related to the bird many are completely unrelated. Other topics may benefit from more sophisticated parsing; 'cat', for example, includes questions about cats, but also about cat fish and cat erpillers.
 
 ### Python packages used in this repo
 
